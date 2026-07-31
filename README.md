@@ -3,7 +3,20 @@
 Single-click generator that drafts a Rotary Global Grant project overview from a
 short form, using the Kimi API.
 
-## Setup
+**Live: <https://audiocrave-hash.github.io/GlobalGrant/>** — bring your own Kimi
+API key. It is stored in your browser only and sent nowhere except to Kimi.
+
+## Two ways to run it
+
+| | Key held by | Needs a server |
+| --- | --- | --- |
+| **Hosted page** (link above) | each visitor, in their own browser | no |
+| **Locally with the proxy** | `kimi_api_key.txt` on your machine | yes, Node |
+
+The page uses the proxy when it can see one on `localhost:3000`, and otherwise
+falls back to calling Kimi directly with the visitor's key. Same file either way.
+
+## Local setup
 
 1. **Add your API key.** Create `kimi_api_key.txt` next to `kimi_proxy_server.cjs`
    containing just the key, or set the `KIMI_API_KEY` environment variable. Get a
@@ -23,14 +36,19 @@ short form, using the Kimi API.
    python -m http.server 8000
    ```
 
-4. Open <http://localhost:8000/rotary_simple_test_v2.html>. The header should read
+4. Open <http://localhost:8000/>. The header should read
    "Proxy Server Connected". Fill in the form and click **Generate Overview**.
 
 ## Why the proxy exists
 
-The browser cannot call the Kimi API directly — CORS blocks it. The proxy runs on
-your machine, forwards requests to Kimi, and returns the response with CORS
-headers. It also holds the API key, so the key never reaches the browser.
+Not for CORS, despite what the older notes in this repo say. `api.moonshot.ai`
+returns `Access-Control-Allow-Origin` for browser origins, so a page can call it
+directly — the original "CORS error" was actually the hostname
+`api.kimi.moonshot.cn` failing to resolve, which the browser reports the same way.
+
+The proxy's real job is to hold the API key server-side, so that a shared or
+deployed page does not hand your key to everyone who loads it. Run it locally and
+nobody using your machine needs a key of their own.
 
 ## API notes
 
@@ -56,7 +74,7 @@ page cannot reintroduce those failures.
 
 | File | Purpose |
 | --- | --- |
-| `rotary_simple_test_v2.html` | The form and proposal output |
+| `index.html` | The form and proposal output |
 | `kimi_proxy_server.cjs` | Local CORS proxy; holds the API key |
 | `kimi_diagnostics.html` | Connectivity, key and CORS tests |
 | `FIX_API_ERROR.md` | Troubleshooting walkthrough |

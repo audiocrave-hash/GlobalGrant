@@ -38,6 +38,43 @@
         }
         .status.proxy-connected { background: rgba(76, 175, 80, 0.3); border-color: rgba(76, 175, 80, 0.5); }
         .status.proxy-offline { background: rgba(255, 152, 0, 0.3); border-color: rgba(255, 152, 0, 0.5); }
+        .keybox {
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            text-align: left;
+        }
+        .keybox.hidden { display: none; }
+        .keybox label {
+            color: white;
+            font-size: 11px;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .keyrow { display: flex; gap: 8px; }
+        .keyrow input {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 13px;
+            border: none;
+            border-radius: 4px;
+        }
+        .keyrow button {
+            padding: 8px 14px;
+            font-size: 11px;
+            background: rgba(255,255,255,0.9);
+            color: #5a4a9f;
+        }
+        .keyrow button:hover { transform: none; box-shadow: none; background: white; }
+        .keyhint {
+            margin-top: 8px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.5;
+        }
+        .keyhint a { color: white; }
         .main {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -175,7 +212,20 @@
             <h1>✨ Rotary Kimi API Test v2</h1>
             <p class="subtitle">Single-Click Proposal Generation Demo</p>
             <div class="status" id="status">
-                🔍 Checking proxy server status...
+                🔍 Checking how to reach Kimi...
+            </div>
+            <div class="keybox" id="keybox">
+                <label for="apiKey">Your Kimi API key</label>
+                <div class="keyrow">
+                    <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off" spellcheck="false">
+                    <button type="button" id="saveKeyBtn" onclick="saveKey()">Save</button>
+                    <button type="button" id="clearKeyBtn" onclick="clearKey()">Forget</button>
+                </div>
+                <p class="keyhint">
+                    Stays in this browser only (localStorage) — it is never sent anywhere except
+                    directly to Kimi. Get one at
+                    <a href="https://platform.kimi.ai/console/api-keys" target="_blank" rel="noopener">platform.kimi.ai</a>.
+                </p>
             </div>
         </header>
 
@@ -256,25 +306,63 @@
     </div>
 
     <script>
-        // The API key lives only in the proxy server, never in this page.
+        // Two ways to reach Kimi:
+        //   1. The local proxy, which holds the key server-side (when running locally).
+        //   2. Straight from this page with a key the visitor supplies (GitHub Pages).
+        // The key is never baked into this file — a public page cannot keep a secret.
         const PROXY_ENDPOINT = "http://localhost:3000/api/generate";
-        
+        const KIMI_ENDPOINT = "https://api.moonshot.ai/v1/chat/completions";
+        const KIMI_MODEL = "kimi-k2.6";
+        const KEY_STORAGE = "kimi_api_key";
+
         let proxyAvailable = false;
 
-        // Check if proxy server is available
+        function storedKey() {
+            try { return localStorage.getItem(KEY_STORAGE) || ''; } catch (e) { return ''; }
+        }
+
+        // Prefer the proxy when it is there; otherwise fall back to the visitor's key.
         async function checkProxy() {
             try {
                 const response = await fetch('http://localhost:3000/health', { method: 'GET' });
                 if (response.ok) {
                     proxyAvailable = true;
-                    updateStatus('proxy-connected', '✓ Proxy Server Connected (localhost:3000)');
+                    document.getElementById('keybox').classList.add('hidden');
+                    updateStatus('proxy-connected', '✓ Proxy server connected (localhost:3000) — no key needed');
                     return;
                 }
             } catch (e) {
-                // Proxy not available
+                // No proxy: this is the normal case on GitHub Pages.
             }
             proxyAvailable = false;
-            updateStatus('proxy-offline', '⚠️ Proxy Offline — run: node kimi_proxy_server.cjs');
+            document.getElementById('keybox').classList.remove('hidden');
+            reflectKeyState();
+        }
+
+        function reflectKeyState() {
+            const key = storedKey();
+            if (key) {
+                document.getElementById('apiKey').value = key;
+                updateStatus('proxy-connected', '✓ Using your API key (saved in this browser)');
+            } else {
+                updateStatus('proxy-offline', '🔑 Enter your Kimi API key below to generate');
+            }
+        }
+
+        function saveKey() {
+            const key = document.getElementById('apiKey').value.trim();
+            if (!key.startsWith('sk-')) {
+                updateStatus('proxy-offline', '⚠️ That does not look like a Kimi key — they start with "sk-"');
+                return;
+            }
+            try { localStorage.setItem(KEY_STORAGE, key); } catch (e) {}
+            reflectKeyState();
+        }
+
+        function clearKey() {
+            try { localStorage.removeItem(KEY_STORAGE); } catch (e) {}
+            document.getElementById('apiKey').value = '';
+            reflectKeyState();
         }
 
         function updateStatus(className, message) {
@@ -315,24 +403,50 @@ Write approximately 250-350 words. Format as a flowing paragraph suitable for in
             generateBtn.disabled = true;
 
             try {
-                const response = await fetch(PROXY_ENDPOINT, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        max_tokens: 8000,
-                        messages: [{ role: "user", content: prompt }]
+                const key = storedKey();
+
+                if (!proxyAvailable && !key) {
+                    throw new Error('NO_KEY');
+                }
+
+                // The proxy sets model/temperature/max_tokens itself; when calling
+                // Kimi directly this page has to get them right. Temperature must be
+                // 1, and max_tokens has to be generous because the model spends
+                // tokens reasoning before it writes a word.
+                const response = proxyAvailable
+                    ? await fetch(PROXY_ENDPOINT, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            max_tokens: 8000,
+                            messages: [{ role: "user", content: prompt }]
+                        })
                     })
-                });
+                    : await fetch(KIMI_ENDPOINT, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${key}`
+                        },
+                        body: JSON.stringify({
+                            model: KIMI_MODEL,
+                            max_tokens: 8000,
+                            temperature: 1,
+                            messages: [{ role: "user", content: prompt }]
+                        })
+                    });
 
                 if (!response.ok) {
-                    const error = await response.json();
+                    const error = await response.json().catch(() => ({}));
                     throw new Error(`API Error ${response.status}: ${error.error?.message || "Unknown error"}`);
                 }
 
                 const data = await response.json();
                 const text = data.choices[0].message.content;
+
+                if (!text) {
+                    throw new Error('The model returned nothing — it spent its whole token budget reasoning. Try again.');
+                }
 
                 loadingDiv.style.display = 'none';
                 outputDiv.innerHTML = `<p>${text}</p>`;
@@ -341,22 +455,30 @@ Write approximately 250-350 words. Format as a flowing paragraph suitable for in
 
             } catch (error) {
                 loadingDiv.style.display = 'none';
+
                 let errorMsg = error.message;
-                
-                if (error.message.includes('Failed to fetch')) {
-                    errorMsg = 'Could not reach the proxy server on localhost:3000.';
+                let hint = '';
+
+                if (error.message === 'NO_KEY') {
+                    errorMsg = 'No API key yet.';
+                    hint = 'Paste your Kimi key into the box at the top and press Save. Get one at platform.kimi.ai.';
+                } else if (error.message.includes('401')) {
+                    errorMsg = 'Kimi rejected that API key.';
+                    hint = 'Check it was copied in full, and that it came from platform.kimi.ai (keys from the separate China platform will not work here).';
+                } else if (error.message.includes('429')) {
+                    errorMsg = 'Rate limited or out of credit.';
+                    hint = 'Check your usage at platform.kimi.ai and try again shortly.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMsg = proxyAvailable
+                        ? 'Could not reach the proxy server on localhost:3000.'
+                        : 'Could not reach the Kimi API — check your internet connection.';
+                    hint = proxyAvailable ? 'Restart it with: node kimi_proxy_server.cjs' : '';
                 }
-                
+
                 outputDiv.innerHTML = `
                     <div class="error">
                         <strong>❌ Error:</strong> ${errorMsg}
-                        <p style="margin-top: 10px; font-size: 12px;">
-                            <strong>Solution:</strong> Start the Node.js proxy server:<br>
-                            1. Open terminal<br>
-                            2. Run: <code>node kimi_proxy_server.cjs</code><br>
-                            3. Keep it running<br>
-                            4. Try again
-                        </p>
+                        ${hint ? `<p style="margin-top: 10px; font-size: 12px;">${hint}</p>` : ''}
                     </div>
                 `;
                 generateBtn.disabled = false;

@@ -41,7 +41,7 @@ If you're getting this error:
    ║  ✓ API Key: sk-…                                    ║
    ║                                                               ║
    ║  📝 Next Steps:                                              ║
-   ║  1. Open rotary_simple_test_v2.html in your browser         ║
+   ║  1. Open index.html in your browser         ║
    ║  2. It will auto-detect this proxy server                   ║
    ║  3. Click "Generate Overview"                               ║
    ║  4. Watch Kimi generate your proposal text! ✨              ║
@@ -56,7 +56,7 @@ If you're getting this error:
 
 ### **Step 3: Use the New Version of the HTML**
 
-1. **Download** `rotary_simple_test_v2.html` (this is the updated version)
+1. **Download** `index.html` (this is the updated version)
 2. **Double-click** to open in browser
 3. You should see status: **"✓ Proxy Server Connected"** (green)
 4. **Click "Generate Overview"**
@@ -83,7 +83,7 @@ Browser → Proxy Server (localhost:3000) → Kimi API → ✓ Success
 | Terminal Window | Purpose |
 |---|---|
 | **Terminal 1:** `node kimi_proxy_server.cjs` | Proxy server (keep open) |
-| **Browser:** `rotary_simple_test_v2.html` | Proposal generator |
+| **Browser:** `index.html` | Proposal generator |
 
 ---
 
@@ -107,7 +107,7 @@ Browser → Proxy Server (localhost:3000) → Kimi API → ✓ Success
 ### **"✓ Proxy Connected" but still get error**
 - Check browser console (F12) for actual error
 - The HTML is newer than expected
-- Try `rotary_simple_test_v2.html` instead of v1
+- Try `index.html` instead of v1
 
 ---
 
@@ -120,7 +120,7 @@ Browser → Proxy Server (localhost:3000) → Kimi API → ✓ Success
 - [ ] Run `node kimi_proxy_server.cjs`
 - [ ] See "✓ Server running" message
 - [ ] Keep terminal open
-- [ ] Open `rotary_simple_test_v2.html` in browser
+- [ ] Open `index.html` in browser
 - [ ] See green "✓ Proxy Server Connected" status
 - [ ] Click "Generate Overview"
 - [ ] See proposal text appear ✨
@@ -138,7 +138,7 @@ Browser → Proxy Server (localhost:3000) → Kimi API → ✓ Success
 ## 🚀 **Ready to Go?**
 
 1. Start the proxy server (follow Steps 1-2 above)
-2. Open `rotary_simple_test_v2.html`
+2. Open `index.html`
 3. Click "Generate Overview"
 4. Copy your proposal! ✨
 
