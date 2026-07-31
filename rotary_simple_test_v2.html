@@ -344,7 +344,7 @@ Write approximately 250-350 words. Format as a flowing paragraph suitable for in
                 let errorMsg = error.message;
                 
                 if (error.message.includes('Failed to fetch')) {
-                    errorMsg = 'CORS Error: Direct API blocked by browser. Start the proxy server!';
+                    errorMsg = 'Could not reach the proxy server on localhost:3000.';
                 }
                 
                 outputDiv.innerHTML = `
