@@ -310,7 +310,10 @@
         //   1. The local proxy, which holds the key server-side (when running locally).
         //   2. Straight from this page with a key the visitor supplies (GitHub Pages).
         // The key is never baked into this file — a public page cannot keep a secret.
-        const PROXY_ENDPOINT = "http://localhost:3000/api/generate";
+        // Where the proxy might be: same origin first (hosted, e.g. Railway),
+        // then a local one (page opened from a separate static server).
+        const PROXY_CANDIDATES = ["", "http://localhost:3000"];
+        let proxyBase = null;
         const KIMI_ENDPOINT = "https://api.moonshot.ai/v1/chat/completions";
         const KIMI_MODEL = "kimi-k2.6";
         const KEY_STORAGE = "kimi_api_key";
@@ -323,16 +326,22 @@
 
         // Prefer the proxy when it is there; otherwise fall back to the visitor's key.
         async function checkProxy() {
-            try {
-                const response = await fetch('http://localhost:3000/health', { method: 'GET' });
-                if (response.ok) {
+            for (const base of PROXY_CANDIDATES) {
+                try {
+                    const response = await fetch(`${base}/health`, { method: 'GET' });
+                    if (!response.ok) continue;
+                    const body = await response.json();
+                    if (body.server !== 'Kimi Proxy') continue;
+
                     proxyAvailable = true;
+                    proxyBase = base;
                     document.getElementById('keybox').classList.add('hidden');
-                    updateStatus('proxy-connected', '✓ Proxy server connected (localhost:3000) — no key needed');
+                    updateStatus('proxy-connected', '✓ Connected — no API key needed');
                     return;
+                } catch (e) {
+                    // Try the next candidate. Landing here is normal on a static
+                    // host, where /health is a 404 and localhost is unreachable.
                 }
-            } catch (e) {
-                // No proxy: this is the normal case on GitHub Pages.
             }
             proxyAvailable = false;
             document.getElementById('keybox').classList.remove('hidden');
@@ -414,7 +423,7 @@ Write approximately 250-350 words. Format as a flowing paragraph suitable for in
                 // 1, and max_tokens has to be generous because the model spends
                 // tokens reasoning before it writes a word.
                 const response = proxyAvailable
-                    ? await fetch(PROXY_ENDPOINT, {
+                    ? await fetch(`${proxyBase}/api/generate`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -470,9 +479,9 @@ Write approximately 250-350 words. Format as a flowing paragraph suitable for in
                     hint = 'Check your usage at platform.kimi.ai and try again shortly.';
                 } else if (error.message.includes('Failed to fetch')) {
                     errorMsg = proxyAvailable
-                        ? 'Could not reach the proxy server on localhost:3000.'
+                        ? 'Could not reach the server.'
                         : 'Could not reach the Kimi API — check your internet connection.';
-                    hint = proxyAvailable ? 'Restart it with: node kimi_proxy_server.cjs' : '';
+                    hint = proxyAvailable ? 'If you are running it locally, restart with: node kimi_proxy_server.cjs' : '';
                 }
 
                 outputDiv.innerHTML = `

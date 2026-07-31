@@ -37,7 +37,29 @@ function readKeyFile() {
 }
 const KIMI_ENDPOINT = 'https://api.moonshot.ai/v1/chat/completions';
 const KIMI_MODEL = 'kimi-k2.6';
-const PORT = 3000;
+// Railway (and most hosts) hand the port in via the environment.
+const PORT = process.env.PORT || 3000;
+
+// Static files this server will hand out. Anything not listed is a 404, so a
+// stray path can never read kimi_api_key.txt or any other file on disk.
+const STATIC = {
+    '/': ['index.html', 'text/html; charset=utf-8'],
+    '/index.html': ['index.html', 'text/html; charset=utf-8'],
+    '/kimi_diagnostics.html': ['kimi_diagnostics.html', 'text/html; charset=utf-8']
+};
+
+function serveStatic(route, res) {
+    const [file, type] = STATIC[route];
+    require('fs').readFile(require('path').join(__dirname, file), (err, buf) => {
+        if (err) {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Not found');
+            return;
+        }
+        res.writeHead(200, { 'Content-Type': type });
+        res.end(buf);
+    });
+}
 
 // Create HTTP server that accepts POST requests
 const server = http.createServer((req, res) => {
@@ -78,59 +100,13 @@ const server = http.createServer((req, res) => {
         });
 
     } else if (req.url === '/health') {
-        // Health check endpoint
+        // Health check endpoint — also how the page decides whether a proxy is
+        // in front of it, so the "server" field matters.
         res.writeHead(200);
         res.end(JSON.stringify({ status: 'ok', server: 'Kimi Proxy', version: '1.0' }));
 
-    } else if (req.url === '/') {
-        // Welcome page
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Kimi Proxy Server</title>
-                <style>
-                    body { font-family: sans-serif; padding: 40px; background: #f5f5f5; }
-                    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                    h1 { color: #667eea; }
-                    .status { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px; border-radius: 4px; }
-                    .code { background: #f4f4f4; padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>✅ Kimi API Proxy Server</h1>
-                    <div class="status">
-                        <strong>✓ Server is running on http://localhost:3000</strong>
-                    </div>
-                    <h2>What This Does:</h2>
-                    <p>This server acts as a bridge between your browser and the Kimi API, solving CORS issues.</p>
-                    
-                    <h2>The HTML Files Will:</h2>
-                    <ul>
-                        <li>✓ Auto-detect this proxy server</li>
-                        <li>✓ Send requests through this server</li>
-                        <li>✓ Bypass CORS restrictions</li>
-                        <li>✓ Work properly without errors</li>
-                    </ul>
-
-                    <h2>Keep This Window Open:</h2>
-                    <p>Leave this server running while you use the HTML files. When done, you can close this window.</p>
-
-                    <h2>Endpoints:</h2>
-                    <div class="code">
-                        POST /api/generate — Forward requests to Kimi API<br>
-                        GET /health — Server status check<br>
-                        GET / — This page
-                    </div>
-
-                    <h2>Ready to Use:</h2>
-                    <p>Open <strong>rotary_simple_test.html</strong> or <strong>rotary_ai_proposal_writer.html</strong> now. They'll work with this proxy! 🚀</p>
-                </div>
-            </body>
-            </html>
-        `);
+    } else if (req.method === 'GET' && STATIC[req.url.split('?')[0]]) {
+        serveStatic(req.url.split('?')[0], res);
 
     } else {
         res.writeHead(404);
@@ -184,24 +160,13 @@ function forwardToKimi(payload, res) {
 // Start server
 server.listen(PORT, () => {
     console.log(`
-╔═══════════════════════════════════════════════════════════════╗
-║          🚀 Kimi API Proxy Server Started                    ║
-╠═══════════════════════════════════════════════════════════════╣
-║                                                               ║
-║  ✓ Server running on: http://localhost:${PORT}                ║
-║  ✓ API Key: ${KIMI_API_KEY.substring(0, 10)}...               ║
-║                                                               ║
-║  📝 Next Steps:                                              ║
-║  1. Open rotary_simple_test.html in your browser            ║
-║  2. It will auto-detect this proxy server                   ║
-║  3. Click "Generate Overview"                               ║
-║  4. Watch Kimi generate your proposal text! ✨              ║
-║                                                               ║
-║  ⚠️  Keep this window open while using the HTML files        ║
-║  👋 To stop the server, press Ctrl+C                         ║
-║                                                               ║
-╚═══════════════════════════════════════════════════════════════╝
-    `);
+🚀 Rotary proposal generator running on port ${PORT}
+   Key: ${KIMI_API_KEY.substring(0, 10)}…  Model: ${KIMI_MODEL}
+
+   Open http://localhost:${PORT}/ and click "Generate Overview".
+   The page is served from here, so no separate static server is needed.
+   Ctrl+C to stop.
+`);
 });
 
 // Handle shutdown gracefully

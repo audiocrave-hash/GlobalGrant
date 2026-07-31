@@ -1,0 +1,12 @@
+{
+  "name": "global-grant",
+  "version": "1.0.0",
+  "description": "Rotary Global Grant proposal generator, powered by the Kimi API",
+  "private": true,
+  "scripts": {
+    "start": "node kimi_proxy_server.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
