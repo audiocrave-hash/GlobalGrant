@@ -191,6 +191,18 @@
             font-size: 13px;
             border-left: 4px solid #3a3;
         }
+        .clubblock {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+            font-size: 13px;
+            color: #444;
+        }
+        .clubblock div { margin-bottom: 3px; }
+        .clubblock span {
+            font-weight: 600;
+            color: #667eea;
+        }
         .button-group {
             display: flex;
             gap: 8px;
@@ -275,6 +287,28 @@
                 <div class="form-group">
                     <label>Community Problems (comma-separated)</label>
                     <textarea id="problems">Limited income and employment, lack of vocational training, poor job access, gender-based barriers</textarea>
+                </div>
+
+                <h2 style="margin-top: 28px;">🏛️ Sponsoring Club</h2>
+
+                <div class="form-group">
+                    <label>Rotary Club — District 3790</label>
+                    <input type="text" id="club" value="" placeholder="Rotary Club of ...">
+                </div>
+
+                <div class="form-group">
+                    <label>Club President</label>
+                    <input type="text" id="president" value="" placeholder="Full name">
+                </div>
+
+                <div class="form-group">
+                    <label>Club Secretary</label>
+                    <input type="text" id="secretary" value="" placeholder="Full name">
+                </div>
+
+                <div class="form-group">
+                    <label>Prepared By</label>
+                    <input type="text" id="preparedBy" value="" placeholder="Full name">
                 </div>
             </div>
 
@@ -374,6 +408,13 @@
             reflectKeyState();
         }
 
+        // Club names and officers are typed by hand and land in innerHTML.
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[c]);
+        }
+
         function updateStatus(className, message) {
             const status = document.getElementById('status');
             status.className = `status ${className}`;
@@ -388,6 +429,10 @@
             const timeline = document.getElementById('timeline').value;
             const budget = document.getElementById('budget').value;
             const problems = document.getElementById('problems').value;
+            const club = document.getElementById('club').value.trim();
+            const president = document.getElementById('president').value.trim();
+            const secretary = document.getElementById('secretary').value.trim();
+            const preparedBy = document.getElementById('preparedBy').value.trim();
 
             const prompt = `Write a professional project overview for a Rotary Global Grant proposal.
 
@@ -398,8 +443,9 @@ Timeline: ${timeline} months
 Beneficiaries: ${beneficiaries}
 Budget: $${budget}
 Community Needs: ${problems}
+${club ? `Sponsoring Club: ${club}, Rotary International District 3790` : ''}
 
-Write approximately 250-350 words. Format as a flowing paragraph suitable for inclusion in a professional grant proposal. Be specific, compelling, and Rotary Foundation compliant. Explain the problem, why this initiative matters, and how it will make a difference.`;
+Write approximately 250-350 words. Format as a flowing paragraph suitable for inclusion in a professional grant proposal. Be specific, compelling, and Rotary Foundation compliant. Explain the problem, why this initiative matters, and how it will make a difference.${club ? ` Name the sponsoring club where it reads naturally.` : ''}`;
 
             const outputDiv = document.getElementById('output');
             const loadingDiv = document.getElementById('loading');
@@ -457,8 +503,21 @@ Write approximately 250-350 words. Format as a flowing paragraph suitable for in
                     throw new Error('The model returned nothing — it spent its whole token budget reasoning. Try again.');
                 }
 
+                const details = [
+                    ['Sponsoring Club', club && `${club} — RI District 3790`],
+                    ['Club President', president],
+                    ['Club Secretary', secretary],
+                    ['Prepared By', preparedBy]
+                ].filter(([, value]) => value);
+
+                const header = details.length
+                    ? `<div class="clubblock">${details
+                        .map(([label, value]) => `<div><span>${label}:</span> ${escapeHtml(value)}</div>`)
+                        .join('')}</div>`
+                    : '';
+
                 loadingDiv.style.display = 'none';
-                outputDiv.innerHTML = `<p>${text}</p>`;
+                outputDiv.innerHTML = `${header}<p>${escapeHtml(text)}</p>`;
                 copyBtn.disabled = false;
                 generateBtn.disabled = false;
 
