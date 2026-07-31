@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimi API Diagnostics</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #00ffff; margin-bottom: 20px; }
+        .test-section {
+            background: #2d2d2d;
+            border: 1px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+        .test-section h2 {
+            color: #00ffff;
+            font-size: 14px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 8px;
+        }
+        button {
+            background: #00ff00;
+            color: #1e1e1e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        button:hover { background: #00cc00; }
+        .log {
+            background: #1a1a1a;
+            border: 1px solid #00ff00;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffcc00; }
+        .info { color: #00ccff; }
+        input, textarea {
+            background: #2d2d2d;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            width: 100%;
+        }
+        label {
+            color: #00ccff;
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Kimi API Diagnostics</h1>
+        <p>Test your Kimi API connection and troubleshoot issues</p>
+
+        <!-- Test 1: Network -->
+        <div class="test-section">
+            <h2>Test 1: Network Connectivity</h2>
+            <p>Check if your browser can reach the Kimi API</p>
+            <button onclick="testNetwork()">🌐 Test Network Access</button>
+            <div id="networkLog" class="log"></div>
+        </div>
+
+        <!-- Test 2: API Key -->
+        <div class="test-section">
+            <h2>Test 2: API Key Validation</h2>
+            <label>Enter your Kimi API Key:</label>
+            <input type="password" id="apiKey" placeholder="sk-..." >
+            <button onclick="testApiKey()">🔑 Validate API Key</button>
+            <div id="keyLog" class="log"></div>
+        </div>
+
+        <!-- Test 3: Simple Request -->
+        <div class="test-section">
+            <h2>Test 3: Simple API Request</h2>
+            <p>Send a minimal test request to Kimi</p>
+            <button onclick="testSimpleRequest()">📤 Send Test Request</button>
+            <div id="requestLog" class="log"></div>
+        </div>
+
+        <!-- Test 4: CORS Check -->
+        <div class="test-section">
+            <h2>Test 4: CORS & Headers</h2>
+            <p>Diagnose CORS (Cross-Origin Resource Sharing) issues</p>
+            <button onclick="testCORS()">🔐 Check CORS</button>
+            <div id="corsLog" class="log"></div>
+        </div>
+
+        <!-- Solutions -->
+        <div class="test-section">
+            <h2>⚠️ If Tests Fail - Try These Solutions:</h2>
+            <div style="color: #00ccff; font-size: 13px; line-height: 1.8;">
+                <p><strong>Solution 1: Use Backend Proxy</strong></p>
+                <p>❌ Direct browser → Kimi often fails due to CORS</p>
+                <p>✅ Browser → Your Backend → Kimi works</p>
+                <p>→ Run the Node.js backend server (see backend solution)</p>
+
+                <p style="margin-top: 15px;"><strong>Solution 2: Check API Key</strong></p>
+                <p>• Make sure your API key starts with "sk-"</p>
+                <p>• Check you copied it correctly</p>
+                <p>• Verify it's not expired at platform.kimi.ai</p>
+
+                <p style="margin-top: 15px;"><strong>Solution 3: Use Anthropic Claude API</strong></p>
+                <p>✅ Claude API works better with browser requests</p>
+                <p>→ Switch to Claude API (ask me for updated HTML)</p>
+
+                <p style="margin-top: 15px;"><strong>Solution 4: CORS Proxy</strong></p>
+                <p>✅ Use a free CORS proxy service</p>
+                <p>→ Ask me for CORS proxy version</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            const line = `[${timestamp}] <span class="${color}">${message}</span>\n`;
+            el.innerHTML += line;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        async function testNetwork() {
+            const logId = 'networkLog';
+            document.getElementById(logId).innerHTML = '';
+            log(logId, '🔍 Testing network connectivity...', 'info');
+
+            try {
+                // Test 1: DNS
+                log(logId, 'Testing DNS resolution for api.moonshot.ai...', 'info');
+                const head = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+                    method: 'OPTIONS',
+                    mode: 'no-cors'
+                });
+                log(logId, '✓ DNS resolved successfully', 'success');
+                
+                // Test 2: Endpoint reachable
+                log(logId, 'Endpoint appears reachable', 'success');
+                
+            } catch (e) {
+                log(logId, `❌ Network error: ${e.message}`, 'error');
+                log(logId, 'This could be: firewall, VPN, or network restriction', 'warning');
+            }
+        }
+
+        async function testApiKey() {
+            const logId = 'keyLog';
+            document.getElementById(logId).innerHTML = '';
+            const apiKey = document.getElementById('apiKey').value;
+
+            log(logId, '🔑 Validating API Key...', 'info');
+
+            if (!apiKey) {
+                log(logId, '❌ No API key provided', 'error');
+                return;
+            }
+
+            if (!apiKey.startsWith('sk-')) {
+                log(logId, '❌ Invalid format: should start with "sk-"', 'error');
+                return;
+            }
+
+            log(logId, `✓ API Key format valid: ${apiKey.substring(0, 10)}...`, 'success');
+            log(logId, 'Now testing with API...', 'info');
+
+            try {
+                const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'kimi-k2.6',
+                        max_tokens: 100,
+                        messages: [{ role: 'user', content: 'Test' }]
+                    })
+                });
+
+                log(logId, `Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                if (response.status === 401) {
+                    log(logId, '❌ 401 Unauthorized: API key is invalid or expired', 'error');
+                } else if (response.status === 429) {
+                    log(logId, '⚠️ 429 Rate Limited: Too many requests', 'warning');
+                } else if (response.ok) {
+                    log(logId, '✅ API Key is valid!', 'success');
+                    const data = await response.json();
+                    log(logId, `Response: ${JSON.stringify(data).substring(0, 200)}...`, 'info');
+                }
+
+            } catch (e) {
+                log(logId, `❌ Network error: ${e.message}`, 'error');
+                log(logId, 'This is likely a CORS error - browser blocked the request', 'warning');
+            }
+        }
+
+        async function testSimpleRequest() {
+            const logId = 'requestLog';
+            document.getElementById(logId).innerHTML = '';
+            const apiKey = document.getElementById('apiKey').value;
+
+            log(logId, '📤 Sending simple test request...', 'info');
+
+            try {
+                log(logId, `Endpoint: https://api.moonshot.ai/v1/chat/completions`, 'info');
+                log(logId, `API Key: ${apiKey.substring(0, 10)}...`, 'info');
+                log(logId, 'Sending request...', 'info');
+
+                const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'kimi-k2.6',
+                        max_tokens: 150,
+                        temperature: 0.7,
+                        messages: [{
+                            role: 'user',
+                            content: 'Write 3 words about water.'
+                        }]
+                    })
+                });
+
+                log(logId, `Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(logId, '✅ Success! Got response:', 'success');
+                    const text = data.choices[0].message.content;
+                    log(logId, `Generated: "${text}"`, 'success');
+                } else {
+                    log(logId, `❌ Error: ${data.error?.message || JSON.stringify(data)}`, 'error');
+                }
+
+            } catch (e) {
+                log(logId, `❌ Fetch Error: ${e.message}`, 'error');
+                log(logId, 'Likely CORS issue - see Solution 1 in section below', 'warning');
+            }
+        }
+
+        async function testCORS() {
+            const logId = 'corsLog';
+            document.getElementById(logId).innerHTML = '';
+
+            log(logId, '🔐 Testing CORS headers...', 'info');
+
+            try {
+                const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+                    method: 'OPTIONS',
+                    mode: 'cors',
+                    headers: {
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'authorization,content-type'
+                    }
+                });
+
+                log(logId, 'CORS Headers:');
+                log(logId, `Allow-Origin: ${response.headers.get('access-control-allow-origin') || 'Not set (CORS blocked)'}`, 'info');
+                log(logId, `Allow-Methods: ${response.headers.get('access-control-allow-methods') || 'Not set'}`, 'info');
+                log(logId, `Allow-Headers: ${response.headers.get('access-control-allow-headers') || 'Not set'}`, 'info');
+
+                if (!response.headers.get('access-control-allow-origin')) {
+                    log(logId, '⚠️ CORS appears to be restricted', 'warning');
+                    log(logId, 'Solution: Use backend proxy (Node.js server)', 'warning');
+                }
+
+            } catch (e) {
+                log(logId, `❌ CORS Error (expected): ${e.message}`, 'error');
+                log(logId, 'This confirms: Kimi API blocks direct browser requests', 'warning');
+                log(logId, 'Solution: You need a backend proxy/server', 'warning');
+            }
+        }
+    </script>
+</body>
+</html>

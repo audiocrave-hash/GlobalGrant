@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotary Kimi API Test - v2 (Proxy Support)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        .subtitle { font-size: 14px; opacity: 0.9; }
+        .status {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .status.proxy-connected { background: rgba(76, 175, 80, 0.3); border-color: rgba(76, 175, 80, 0.5); }
+        .status.proxy-offline { background: rgba(255, 152, 0, 0.3); border-color: rgba(255, 152, 0, 0.5); }
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            padding: 30px;
+        }
+        .panel h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #667eea;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input, textarea, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        textarea {
+            min-height: 80px;
+            font-size: 13px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 3px solid rgba(102, 126, 234, 0.1);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .output-section {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 16px;
+            min-height: 200px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 12px 0;
+            font-size: 13px;
+            border-left: 4px solid #c33;
+        }
+        .success {
+            background: #efe;
+            color: #3a3;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 12px 0;
+            font-size: 13px;
+            border-left: 4px solid #3a3;
+        }
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .button-group button {
+            flex: 1;
+            padding: 10px;
+            font-size: 12px;
+        }
+        @media (max-width: 768px) {
+            .main { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✨ Rotary Kimi API Test v2</h1>
+            <p class="subtitle">Single-Click Proposal Generation Demo</p>
+            <div class="status" id="status">
+                🔍 Checking proxy server status...
+            </div>
+        </header>
+
+        <div class="main">
+            <!-- LEFT PANEL: Input -->
+            <div class="panel">
+                <h2>📝 Project Details</h2>
+                
+                <div class="form-group">
+                    <label>Project Title</label>
+                    <input type="text" id="title" value="Women's Vocational Skills Training Initiative" placeholder="Enter project name">
+                </div>
+
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="location" value="Lagos, Nigeria" placeholder="City, Country">
+                </div>
+
+                <div class="form-group">
+                    <label>Area of Focus</label>
+                    <select id="area">
+                        <option>Community Economic Development</option>
+                        <option>Maternal and Child Health</option>
+                        <option>Education</option>
+                        <option>Water & Sanitation</option>
+                        <option>Peacebuilding</option>
+                        <option>Disease Prevention</option>
+                        <option>Environmental Sustainability</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Beneficiaries</label>
+                    <input type="number" id="beneficiaries" value="150" placeholder="Total number">
+                </div>
+
+                <div class="form-group">
+                    <label>Timeline (months)</label>
+                    <input type="number" id="timeline" value="6" min="3" max="24" placeholder="Months">
+                </div>
+
+                <div class="form-group">
+                    <label>Budget USD</label>
+                    <input type="number" id="budget" value="48500" min="30000" max="500000" placeholder="Amount">
+                </div>
+
+                <div class="form-group">
+                    <label>Community Problems (comma-separated)</label>
+                    <textarea id="problems">Limited income and employment, lack of vocational training, poor job access, gender-based barriers</textarea>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Output -->
+            <div class="panel">
+                <h2>📄 Generated Project Overview</h2>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Kimi is generating your proposal...</p>
+                </div>
+
+                <div id="output" class="output-section">
+                    <p style="color: #999; text-align: center; padding-top: 60px;">
+                        Click "Generate Overview" to create professional proposal text
+                    </p>
+                </div>
+
+                <div class="button-group" style="margin-top: 16px;">
+                    <button id="generateBtn" onclick="generateProposal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        🚀 Generate Overview
+                    </button>
+                    <button id="copyBtn" onclick="copyToClipboard()" style="background: #28a745;" disabled>
+                        📋 Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The API key lives only in the proxy server, never in this page.
+        const PROXY_ENDPOINT = "http://localhost:3000/api/generate";
+        
+        let proxyAvailable = false;
+
+        // Check if proxy server is available
+        async function checkProxy() {
+            try {
+                const response = await fetch('http://localhost:3000/health', { method: 'GET' });
+                if (response.ok) {
+                    proxyAvailable = true;
+                    updateStatus('proxy-connected', '✓ Proxy Server Connected (localhost:3000)');
+                    return;
+                }
+            } catch (e) {
+                // Proxy not available
+            }
+            proxyAvailable = false;
+            updateStatus('proxy-offline', '⚠️ Proxy Offline — run: node kimi_proxy_server.cjs');
+        }
+
+        function updateStatus(className, message) {
+            const status = document.getElementById('status');
+            status.className = `status ${className}`;
+            status.textContent = message;
+        }
+
+        async function generateProposal() {
+            const title = document.getElementById('title').value;
+            const location = document.getElementById('location').value;
+            const area = document.getElementById('area').value;
+            const beneficiaries = document.getElementById('beneficiaries').value;
+            const timeline = document.getElementById('timeline').value;
+            const budget = document.getElementById('budget').value;
+            const problems = document.getElementById('problems').value;
+
+            const prompt = `Write a professional project overview for a Rotary Global Grant proposal.
+
+Project: "${title}"
+Location: ${location}
+Area of Focus: ${area}
+Timeline: ${timeline} months
+Beneficiaries: ${beneficiaries}
+Budget: $${budget}
+Community Needs: ${problems}
+
+Write approximately 250-350 words. Format as a flowing paragraph suitable for inclusion in a professional grant proposal. Be specific, compelling, and Rotary Foundation compliant. Explain the problem, why this initiative matters, and how it will make a difference.`;
+
+            const outputDiv = document.getElementById('output');
+            const loadingDiv = document.getElementById('loading');
+            const generateBtn = document.getElementById('generateBtn');
+            const copyBtn = document.getElementById('copyBtn');
+
+            // Show loading
+            loadingDiv.style.display = 'block';
+            outputDiv.innerHTML = '';
+            generateBtn.disabled = true;
+
+            try {
+                const response = await fetch(PROXY_ENDPOINT, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        max_tokens: 8000,
+                        messages: [{ role: "user", content: prompt }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(`API Error ${response.status}: ${error.error?.message || "Unknown error"}`);
+                }
+
+                const data = await response.json();
+                const text = data.choices[0].message.content;
+
+                loadingDiv.style.display = 'none';
+                outputDiv.innerHTML = `<p>${text}</p>`;
+                copyBtn.disabled = false;
+                generateBtn.disabled = false;
+
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                let errorMsg = error.message;
+                
+                if (error.message.includes('Failed to fetch')) {
+                    errorMsg = 'CORS Error: Direct API blocked by browser. Start the proxy server!';
+                }
+                
+                outputDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Error:</strong> ${errorMsg}
+                        <p style="margin-top: 10px; font-size: 12px;">
+                            <strong>Solution:</strong> Start the Node.js proxy server:<br>
+                            1. Open terminal<br>
+                            2. Run: <code>node kimi_proxy_server.cjs</code><br>
+                            3. Keep it running<br>
+                            4. Try again
+                        </p>
+                    </div>
+                `;
+                generateBtn.disabled = false;
+            }
+        }
+
+        function copyToClipboard() {
+            const outputDiv = document.getElementById('output');
+            const text = outputDiv.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const copyBtn = document.getElementById('copyBtn');
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Check proxy on load
+        window.addEventListener('load', () => {
+            checkProxy();
+        });
+    </script>
+</body>
+</html>
