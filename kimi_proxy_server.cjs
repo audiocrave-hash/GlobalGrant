@@ -36,7 +36,7 @@ function readKeyFile() {
     }
 }
 const KIMI_ENDPOINT = 'https://api.moonshot.ai/v1/chat/completions';
-const KIMI_MODEL = 'kimi-k2.6';
+const KIMI_MODEL = 'kimi-k2.7-code-highspeed';
 // Railway (and most hosts) hand the port in via the environment.
 const PORT = process.env.PORT || 3000;
 
@@ -133,6 +133,20 @@ function forwardToKimi(payload, res) {
     };
 
     const req = https.request(KIMI_ENDPOINT, options, (kimiRes) => {
+        // Streamed replies are piped straight through, unbuffered, so text
+        // reaches the page as it is written rather than minutes later.
+        if (payload.stream && kimiRes.statusCode === 200) {
+            console.log('✅ Kimi streaming…');
+            res.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no'
+            });
+            kimiRes.pipe(res);
+            return;
+        }
+
         let responseData = '';
 
         kimiRes.on('data', chunk => {

@@ -382,10 +382,9 @@
                     </button>
                 </div>
                 <p class="fullhint">
-                    Writes every section of the Global Grant application. Kimi allows three
-                    requests at a time, so the eight sections are written in waves — allow
-                    around five minutes. Each gets its own Copy button for pasting into
-                    My Rotary.
+                    Writes every section of the Global Grant application — usually well
+                    under a minute. Each section gets its own Copy button for pasting
+                    into My Rotary.
                 </p>
             </div>
         </div>
@@ -401,7 +400,7 @@
         const PROXY_CANDIDATES = ["", "http://localhost:3000"];
         let proxyBase = null;
         const KIMI_ENDPOINT = "https://api.moonshot.ai/v1/chat/completions";
-        const KIMI_MODEL = "kimi-k2.6";
+        const KIMI_MODEL = "kimi-k2.7-code-highspeed";
         const KEY_STORAGE = "kimi_api_key";
 
         let proxyAvailable = false;
@@ -538,6 +537,9 @@ ${f.club ? `Sponsoring Club: ${f.club}, Rotary International District 3790` : ''
                         model: KIMI_MODEL,
                         max_tokens: 8000,
                         temperature: 1,
+                        // Most of the wait is reasoning, not writing: 175s at the
+                        // default against 46s at "low", same length, same quality.
+                        reasoning_effort: "low",
                         messages: [{ role: "user", content: prompt }]
                     })
                 });
@@ -602,6 +604,75 @@ ${f.club ? `Sponsoring Club: ${f.club}, Rotary International District 3790` : ''
                 }
             });
             await Promise.all(runners);
+        }
+
+        // Same request as askKimi, but streamed: onDelta is called with each
+        // fragment as it arrives, so the page fills in while the model writes.
+        async function streamKimi(prompt, onDelta) {
+            const key = storedKey();
+            if (!proxyAvailable && !key) throw new Error('NO_KEY');
+
+            const body = JSON.stringify(proxyAvailable
+                ? { max_tokens: 8000, stream: true, messages: [{ role: "user", content: prompt }] }
+                : {
+                    model: KIMI_MODEL, max_tokens: 8000, temperature: 1,
+                    reasoning_effort: "low", stream: true,
+                    messages: [{ role: "user", content: prompt }]
+                });
+
+            const response = await fetch(
+                proxyAvailable ? `${proxyBase}/api/generate` : KIMI_ENDPOINT,
+                {
+                    method: "POST",
+                    headers: proxyAvailable
+                        ? { "Content-Type": "application/json" }
+                        : { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+                    body
+                }
+            );
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(`API Error ${response.status}: ${error.error?.message || "Unknown error"}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let full = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+
+                // Server-sent events: complete lines only, remainder stays buffered.
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith('data:')) continue;
+
+                    const data = trimmed.slice(5).trim();
+                    if (data === '[DONE]') continue;
+
+                    try {
+                        const delta = JSON.parse(data).choices?.[0]?.delta;
+                        // Ignore reasoning_content — only the answer is wanted.
+                        if (delta?.content) {
+                            full += delta.content;
+                            onDelta(delta.content, full);
+                        }
+                    } catch (e) {
+                        // A partial JSON line: it will arrive complete next round.
+                    }
+                }
+            }
+
+            if (!full) throw new Error('The model returned nothing. Try again.');
+            return full;
         }
 
         function friendlyError(error) {
@@ -717,6 +788,24 @@ Write approximately 250-350 words. Format as a flowing paragraph suitable for in
             }
         ];
 
+        async function streamWithRetry(prompt, body, onWait) {
+            const deadline = Date.now() + RETRY_BUDGET_MS;
+
+            for (let attempt = 0; ; attempt++) {
+                try {
+                    return await streamKimi(prompt, (_delta, full) => {
+                        body.className = 'section-body';
+                        body.textContent = full;
+                    });
+                } catch (error) {
+                    if (!isRetryable(error) || Date.now() > deadline) throw error;
+                    const delay = retryDelay(error, attempt);
+                    if (onWait) onWait(Math.max(1, Math.round(delay / 1000)));
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
         async function generateFullApplication() {
             const f = fields();
             const outputDiv = document.getElementById('output');
@@ -743,6 +832,8 @@ Write approximately 250-350 words. Format as a flowing paragraph suitable for in
             let done = 0;
             const status = document.getElementById('fullstatus');
 
+            // Three at a time, the most Kimi allows. Each section streams into
+            // its own card, so text appears as it is written.
             await runPool(RI_SECTIONS, async section => {
                 const body = document.getElementById(`body-${section.id}`);
                 body.textContent = 'writing…';
@@ -757,11 +848,10 @@ ${section.ask}
 Write only this section. No heading, no preamble, no commentary — the text will be pasted straight into the application form. Be specific and Rotary Foundation compliant; invent plausible detail where the brief is silent, but never contradict it.`;
 
                 try {
-                    const text = await askKimiWithRetry(prompt, seconds => {
+                    await streamWithRetry(prompt, body, seconds => {
                         body.textContent = `rate limited — retrying in ${seconds}s…`;
                     });
                     body.className = 'section-body';
-                    body.textContent = text.trim();
                 } catch (error) {
                     const { msg } = friendlyError(error);
                     body.className = 'section-body failed';
