@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 900px;
+            max-width: 1280px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
@@ -77,10 +77,15 @@
         .keyhint a { color: white; }
         .main {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
+            /* The form needs a fixed, readable width; everything left over goes
+               to the output, which is what people actually read. */
+            grid-template-columns: minmax(300px, 360px) 1fr;
+            gap: 32px;
             padding: 30px;
+            align-items: start;
         }
+        .panel { display: flex; flex-direction: column; }
+        .panel.output-panel { position: sticky; top: 20px; }
         .panel h2 {
             font-size: 18px;
             margin-bottom: 16px;
@@ -165,13 +170,16 @@
             background: #f9f9f9;
             border: 1px solid #e0e0e0;
             border-radius: 6px;
-            padding: 16px;
-            min-height: 200px;
+            padding: 20px;
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.7;
             color: #333;
             overflow-y: auto;
-            max-height: 300px;
+            /* The output is the point of the page, so it takes the height it
+               can: fills the panel, and grows with the viewport. */
+            flex: 1;
+            min-height: 460px;
+            max-height: calc(100vh - 260px);
         }
         .error {
             background: #fee;
@@ -253,8 +261,10 @@
             padding: 10px;
             font-size: 12px;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .main { grid-template-columns: 1fr; }
+            .panel.output-panel { position: static; }
+            .output-section { max-height: none; min-height: 320px; }
         }
     </style>
 </head>
@@ -288,12 +298,12 @@
                 
                 <div class="form-group">
                     <label>Project Title</label>
-                    <input type="text" id="title" value="Women's Vocational Skills Training Initiative" placeholder="Enter project name">
+                    <input type="text" id="title" value="Solar Lighting Project" placeholder="Enter project name">
                 </div>
 
                 <div class="form-group">
                     <label>Location</label>
-                    <input type="text" id="location" value="Lagos, Nigeria" placeholder="City, Country">
+                    <input type="text" id="location" value="Pangasinan" placeholder="City, Country">
                 </div>
 
                 <div class="form-group">
@@ -311,7 +321,7 @@
 
                 <div class="form-group">
                     <label>Beneficiaries</label>
-                    <input type="number" id="beneficiaries" value="150" placeholder="Total number">
+                    <input type="number" id="beneficiaries" value="500" placeholder="Total number">
                 </div>
 
                 <div class="form-group">
@@ -321,12 +331,12 @@
 
                 <div class="form-group">
                     <label>Budget USD</label>
-                    <input type="number" id="budget" value="48500" min="30000" max="500000" placeholder="Amount">
+                    <input type="number" id="budget" value="30000" min="30000" max="500000" placeholder="Amount">
                 </div>
 
                 <div class="form-group">
                     <label>Community Problems (comma-separated)</label>
-                    <textarea id="problems">Limited income and employment, lack of vocational training, poor job access, gender-based barriers</textarea>
+                    <textarea id="problems" placeholder="e.g. no grid connection, unsafe kerosene lamps, children cannot study after dark"></textarea>
                 </div>
 
                 <h2 style="margin-top: 28px;">🏛️ Sponsoring Club</h2>
@@ -353,7 +363,7 @@
             </div>
 
             <!-- RIGHT PANEL: Output -->
-            <div class="panel">
+            <div class="panel output-panel">
                 <h2>📄 Generated Project Overview</h2>
                 
                 <div class="loading" id="loading">
@@ -491,7 +501,7 @@ Area of Focus: ${f.area}
 Timeline: ${f.timeline} months
 Beneficiaries: ${f.beneficiaries}
 Budget: $${f.budget}
-Community Needs: ${f.problems}
+${f.problems ? `Community Needs: ${f.problems}` : 'Community Needs: not stated — infer the needs this project type addresses in this location.'}
 ${f.club ? `Sponsoring Club: ${f.club}, Rotary International District 3790` : ''}`;
         }
 
