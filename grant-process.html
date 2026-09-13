@@ -1,1 +1,307 @@
-<PLACEHOLDER_PROCESS>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grant Process — Rotary District 3790</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-deep:#123A6B;
+    --blue:#0067C8;
+    --gold:#F0A21B;
+    --teal:#0F6E56;
+    --teal-deep:#085041;
+    --paper:#FAF8F3;
+    --paper-dim:#F1EEE5;
+    --ink:#1D2430;
+    --ink-soft:#54606E;
+    --line:#DDD8C9;
+    --serif:'Source Serif 4', Georgia, serif;
+    --sans:'Inter', -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 28px;}
+  img,svg{display:block;}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(250,248,243,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px; max-width:1040px; margin:0 auto;
+  }
+  .brand{
+    font-family:var(--serif); font-weight:600; font-size:1.05rem;
+    display:flex; flex-direction:column; line-height:1.15;
+    text-decoration:none; color:var(--ink);
+  }
+  .brand span{font-family:var(--sans); font-size:0.72rem; color:var(--ink-soft); font-weight:500; letter-spacing:0.01em;}
+  .navlinks{display:flex; gap:28px; font-size:0.92rem; font-weight:500;}
+  .navlinks a{text-decoration:none; color:var(--ink-soft); transition:color .15s;}
+  .navlinks a:hover{color:var(--blue);}
+  .navlinks a.active{color:var(--blue-deep);}
+  .navtoggle{display:none; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--ink);}
+  @media (max-width:760px){
+    .navlinks{position:absolute; top:100%; left:0; right:0; background:var(--paper); flex-direction:column; gap:0; border-bottom:1px solid var(--line); display:none;}
+    .navlinks.open{display:flex;}
+    .navlinks a{padding:14px 28px; border-top:1px solid var(--line);}
+    .navtoggle{display:block;}
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{padding:64px 0 48px; border-bottom:1px solid var(--line);}
+  .hero-label{font-size:0.85rem; color:var(--blue); font-weight:600; margin-bottom:18px; letter-spacing:0.01em;}
+  .hero h1{
+    font-family:var(--serif); font-weight:600;
+    font-size:clamp(2rem, 4vw, 3rem);
+    line-height:1.1; color:var(--blue-deep); letter-spacing:-0.01em; max-width:22ch;
+  }
+  .hero p{margin-top:20px; font-size:1.05rem; color:var(--ink-soft); max-width:62ch;}
+
+  /* ---------- Section shell ---------- */
+  section{padding:56px 0; border-bottom:1px solid var(--line);}
+  .section-head{max-width:64ch; margin-bottom:32px;}
+  .kicker{font-size:0.82rem; color:var(--blue); font-weight:600; margin-bottom:10px;}
+  h2{font-family:var(--serif); font-weight:600; font-size:1.7rem; color:var(--blue-deep); letter-spacing:-0.01em;}
+  .section-head p{margin-top:14px; color:var(--ink-soft); font-size:1.02rem;}
+
+  /* ---------- Decision callout ---------- */
+  .decision{background:var(--paper-dim); border-left:3px solid var(--gold); border-radius:2px; padding:26px 28px;}
+  .decision h3{font-family:var(--serif); font-size:1.15rem; font-weight:600; color:var(--blue-deep); margin-bottom:10px;}
+  .decision p{color:var(--ink-soft); font-size:0.96rem; max-width:70ch;}
+  .decision p + p{margin-top:8px;}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex; gap:8px; margin-bottom:0; border-bottom:1px solid var(--line);}
+  .tab-btn{
+    font-family:var(--sans); font-size:0.95rem; font-weight:600; color:var(--ink-soft);
+    background:none; border:none; border-bottom:3px solid transparent; padding:14px 4px; margin-right:28px;
+    cursor:pointer; transition:color .15s, border-color .15s;
+  }
+  .tab-btn:hover{color:var(--ink);}
+  .tab-btn.active[data-track="district"]{color:var(--blue-deep); border-color:var(--blue);}
+  .tab-btn.active[data-track="global"]{color:var(--teal-deep); border-color:var(--teal);}
+  .tab-panel{display:none; padding-top:36px;}
+  .tab-panel.active{display:block;}
+
+  /* ---------- Timeline / steps (shared with index.html) ---------- */
+  .timeline{border-top:1px solid var(--line);}
+  .step{display:grid; grid-template-columns:60px 1fr; gap:22px; padding:24px 0; border-bottom:1px solid var(--line);}
+  .step .stepnum{font-family:var(--serif); font-size:1.5rem; font-weight:600;}
+  .tab-panel[data-track="district"] .stepnum{color:var(--blue);}
+  .tab-panel[data-track="global"] .stepnum{color:var(--teal);}
+  .step h4{font-size:1.02rem; font-weight:600; margin-bottom:6px;}
+  .step p{color:var(--ink-soft); font-size:0.94rem; max-width:64ch;}
+  .ref{display:inline-block; margin-top:8px; font-size:0.78rem; font-weight:600; letter-spacing:0.02em; padding:3px 10px; border-radius:20px; white-space:nowrap;}
+  .tab-panel[data-track="district"] .ref{color:var(--blue-deep); border:1px solid var(--blue);}
+  .tab-panel[data-track="global"] .ref{color:var(--teal-deep); border:1px solid var(--teal);}
+  .step.gate{background:var(--paper-dim);}
+
+  /* ---------- Rules panel ---------- */
+  .rules{margin-top:8px;}
+  .rules h3{font-family:var(--serif); font-size:1.15rem; font-weight:600; color:var(--blue-deep); margin-bottom:14px;}
+  .tab-panel[data-track="global"] .rules h3{color:var(--teal-deep);}
+  .rule-item{display:flex; gap:16px; padding:14px 0; border-bottom:1px solid var(--line); font-size:0.93rem;}
+  .rule-item .rule-name{flex:0 0 200px; font-weight:600; color:var(--ink);}
+  .rule-item .rule-body{color:var(--ink-soft);}
+
+  footer{padding:28px 0; text-align:center; font-size:0.82rem; color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="index.html">Global Grants<span>Rotary District 3790</span></a>
+    <button class="navtoggle" id="navtoggle" aria-label="Toggle menu">&#9776;</button>
+    <nav class="navlinks" id="navlinks">
+      <a href="index.html#focus">Areas of Focus</a>
+      <a href="index.html#eligibility">Eligibility</a>
+      <a href="grant-process.html" class="active">Grant Process</a>
+      <a href="index.html#budget">Budget</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="index.html#resources">Resources</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-label">District 3790 &middot; Grants Subcommittees</div>
+    <h1>Two grant tracks, two different paths through the District.</h1>
+    <p>District Grants and Global Grants are administered differently under the District 3790 Stewardship Plan. This page walks through each process end to end, and how to tell which one your project belongs on.</p>
+  </div>
+</section>
+
+<section id="decide">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Start here</div>
+      <h2>Which track fits your project?</h2>
+    </div>
+    <div class="decision">
+      <h3>The choice isn't made by the District — TRF's grant structure decides it</h3>
+      <p><strong>Scale &amp; funding:</strong> District Grants draw only on the District's annual DDF allocation and bundle into one consolidated submission. Global Grants require a minimum total budget (historically $30,000 including the World Fund match) and are individually submitted to TRF with their own grant number.</p>
+      <p><strong>Scope &amp; partners:</strong> District Grants are short-cycle, single-Rotary-year activities. Global Grants are larger, sustainability-driven, and generally need a host sponsor plus an international partner club or district.</p>
+      <p>If a club is unsure which fits, that's a triage conversation with the Grants Chair or Global Grant Chair before either process below begins.</p>
+    </div>
+  </div>
+</section>
+
+<section id="process">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Step by step</div>
+      <h2>The process, once you know your track</h2>
+      <p>Both tracks run through DGRAC — the District Grant Review and Approval Committee — but the approval gate differs sharply after that.</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="district" onclick="showTab('district')">District Grant</button>
+      <button class="tab-btn" data-tab="global" onclick="showTab('global')">Global Grant</button>
+    </div>
+
+    <div class="tab-panel active" data-track="district" id="panel-district">
+      <div class="timeline">
+        <div class="step">
+          <div class="stepnum">01</div>
+          <div><h4>Club submits application</h4><p>To the Grants Chair — not to DGRAC directly. Package includes project description, proposed budget, signed Club MOU, and proof of GMS attendance.</p><span class="ref">Sec. 6.2</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">02</div>
+          <div><h4>Grants Chair review</h4><p>Checks completeness, eligibility, purpose, budget, and District/TRF compliance. Incomplete applications are returned to the club for correction, not held.</p><span class="ref">Sec. 6.3</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">03</div>
+          <div><h4>DGRAC review</h4><p>Weighs eligibility, community need, Areas-of-Focus alignment, budget reasonableness, available funds, equitable access, and the club's prior compliance. Recommendation is documented.</p><span class="ref">Sec. 6.4</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">04</div>
+          <div><h4>District approval</h4><p>The appropriate District Foundation decision-making body signs off before the application moves to consolidation.</p><span class="ref">Sec. VI</span></div>
+        </div>
+        <div class="step gate">
+          <div class="stepnum">05</div>
+          <div><h4>Consolidate and submit to TRF</h4><p>Applications must exist before the spending plan — never the reverse. The District compiles every approved club application into one consolidated submission to RI/TRF.</p><span class="ref">Sec. 6.6&ndash;6.7</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">06</div>
+          <div><h4>TRF approval and release</h4><p>Funds are distributed matching each club's approved allocation. The Treasurer releases only after approvals and documentation are confirmed — minimum two signatories, District Governor excluded.</p><span class="ref">Sec. 6.8, 10.3</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">07</div>
+          <div><h4>Implementation and monitoring</h4><p>Grants Chair tracks progress. Any change in scope, budget, or beneficiaries needs a written request and DGRAC referral before it's implemented — never verbal-only.</p><span class="ref">Sec. 6.9&ndash;6.10</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">08</div>
+          <div><h4>Reporting and closure</h4><p>Required reports are filed. Unused funds of $1,000 or less can be repurposed without preapproval; above that, TRF approval is needed before use or the funds are returned.</p><span class="ref">Sec. XIX&ndash;XX</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-track="global" id="panel-global">
+      <div class="timeline">
+        <div class="step">
+          <div class="stepnum">01</div>
+          <div><h4>Club submits concept</h4><p>To the Global Grant Chair — project description, international partner, budget, and the DDF amount being requested, if any.</p><span class="ref">Sec. VII</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">02</div>
+          <div><h4>Qualification and priority screen</h4><p>Confirms TRF qualification (MOU, GMS) and applies priority rules: clubs with an existing DDF-supported Global Grant can't submit a second one; prior-year DDF recipients rank lower.</p><span class="ref">Sec. 5.1, 7.2&ndash;7.3</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">03</div>
+          <div><h4>DGRAC review</h4><p>Same committee as District Grants, reviewing the same criteria — recommends the DDF request forward.</p><span class="ref">Sec. 6.4</span></div>
+        </div>
+        <div class="step gate">
+          <div class="stepnum">04</div>
+          <div><h4>DDF concurrence</h4><p>Written, unanimous sign-off from the District Governor, Governor-elect, and Rotary Foundation Chair. No 2-of-3 substitute, no verbal approval. This is the one gate with no workaround.</p><span class="ref">Sec. 7.1</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">05</div>
+          <div><h4>DDF recorded</h4><p>Finance Chair or DRFC logs the commitment in the DDF Monitoring Register before it's treated as allocated.</p><span class="ref">Appendix D</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">06</div>
+          <div><h4>Submit to TRF</h4><p>The club finalizes and submits the Global Grant application directly in Grant Center on My Rotary, with District endorsement attached.</p><span class="ref">Sec. VII</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">07</div>
+          <div><h4>Monitoring</h4><p>District tracks status — pending, approved, active, closed — through to TRF activation and beyond.</p><span class="ref">Sec. 3.6</span></div>
+        </div>
+        <div class="step">
+          <div class="stepnum">08</div>
+          <div><h4>Closure and report</h4><p>Final report filed. Unused funds of $1,000 or less can be repurposed without preapproval; above that, TRF approval is needed before use or the funds are returned.</p><span class="ref">Sec. XX</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Before you route a request</div>
+      <h2>Rules that block or reorder a request</h2>
+      <p>Apply these checks in either track before anything advances past DGRAC.</p>
+    </div>
+
+    <div class="tab-panel active" data-track="district" id="rules-district">
+      <div class="rules">
+        <div class="rule-item"><div class="rule-name">Governor's own club</div><div class="rule-body">Categorically ineligible for any District Grant during that Governor's term — no recusal cure. <span class="ref">Sec. 6.5-A</span></div></div>
+        <div class="rule-item"><div class="rule-name">Other DGRAC member's club</div><div class="rule-body">Eligible, but last priority after other clubs are considered; the member recuses from the decision. <span class="ref">Sec. 6.5-B/C</span></div></div>
+        <div class="rule-item"><div class="rule-name">Sequencing</div><div class="rule-body">The spending plan is built from actual applications — never drafted first and backfilled with applications. <span class="ref">Sec. 6.6</span></div></div>
+        <div class="rule-item"><div class="rule-name">No unapproved reallocation</div><div class="rule-body">Funds approved for one project can't shift to another without formal approval. <span class="ref">Sec. 6.9</span></div></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-track="global" id="rules-global">
+      <div class="rules">
+        <div class="rule-item"><div class="rule-name">Unanimous concurrence</div><div class="rule-body">Any DDF request needs written sign-off from DG, DGE, and DRFC together — not a majority. <span class="ref">Sec. 7.1</span></div></div>
+        <div class="rule-item"><div class="rule-name">One Global Grant at a time</div><div class="rule-body">A club with an existing DDF-supported Global Grant can't be considered for a second one in the same period, and can't reserve DDF for a future grant. <span class="ref">Sec. 7.3</span></div></div>
+        <div class="rule-item"><div class="rule-name">Compliance gate</div><div class="rule-body">Overdue reports or unresolved misuse findings block new DDF allocation until resolved. <span class="ref">Sec. 7.4</span></div></div>
+        <div class="rule-item"><div class="rule-name">Cross-district requests</div><div class="rule-body">District 3790 will not fund another district's club's Global Grant unless that district already committed its own DDF, and never for anything returned to D3790 or its officers. <span class="ref">Sec. 8.10</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Rotary District 3790 &middot; Grant Process &middot; Content adapted from the District 3790 Stewardship Plan v6 for local reference &mdash; always confirm current terms in Grant Center.</div>
+</footer>
+
+<script>
+  document.getElementById('navtoggle').addEventListener('click', function(){
+    document.getElementById('navlinks').classList.toggle('open');
+  });
+  document.querySelectorAll('.navlinks a').forEach(function(a){
+    a.addEventListener('click', function(){ document.getElementById('navlinks').classList.remove('open'); });
+  });
+
+  function showTab(track){
+    document.querySelectorAll('.tab-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.tab === track);
+    });
+    document.querySelectorAll('.tab-panel').forEach(function(p){
+      p.classList.toggle('active', p.dataset.track === track);
+    });
+  }
+</script>
+
+</body>
+</html>
